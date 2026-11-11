@@ -1,0 +1,3 @@
+# GitHub repositories whose "package" release holds a package for [mabos], one per line
+mabasterYT/mabos-gtk4
+mabasterYT/mabos-gtk3

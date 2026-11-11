@@ -1,28 +1,16 @@
 # MabOS packages
 
 The pacman repository `[mabos]` of [MabOS](https://github.com/mabasterYT), an Arch Linux setup with
-niri and Quickshell: Arch packages with small MabOS changes, built here by GitHub Actions and signed
-with MabOS's key. Anyone on Arch can use them.
+niri and Quickshell: Arch packages with small MabOS changes, signed with MabOS's key. Anyone on Arch
+can use them. Each package has its own repository with its patch, README and build; this one only
+signs what they build and publishes the repository.
 
 ## Packages
 
-### mabos-gtk4
-
-Arch's `gtk4` with one patch: open GTK 4 windows read `~/.config/gtk-4.0/gtk.css` again when it
-changes, so switching a theme recolors the apps that are already open instead of only the ones
-started afterwards (Nautilus, libadwaita apps, file choosers...). Plain GTK 4 reads that file once,
-when an app starts.
-
-- The patch (`mabos-gtk4/mabos-user-css-live-reload.patch`, in `gtk/gtksettings.c`) watches the
-  `~/.config/gtk-4.0` folder, so a `gtk.css` written in place, replaced by a rename or removed is
-  seen; 150 ms after the last change it loads the file again (an empty style when it is gone).
-- Everything else is Arch's: `scripts/update-gtk4.py` makes `mabos-gtk4/PKGBUILD` from
-  `PKGBUILD.in` and Arch's packaging every day, so new GTK versions and dependency changes follow
-  Arch's `gtk4`. Demos, docs and tests are not built; `gtk-update-icon-cache` stays Arch's.
-- It replaces `gtk4` (it provides `gtk4` and `libgtk-4.so`). `pacman -S gtk4` goes back.
-- Flatpak apps use their runtime's GTK and are not affected, nor is GTK 3.
-- The idea comes from [saneaspect/gtk4-live-css](https://github.com/saneaspect/gtk4-live-css); the
-  patch here is MabOS's own.
+| Package | Replaces | What it changes |
+| --- | --- | --- |
+| [mabos-gtk4](https://github.com/mabasterYT/mabos-gtk4) | `gtk4` | Open GTK 4 windows read `~/.config/gtk-4.0/gtk.css` again when it changes, so a theme switch recolors running apps |
+| [mabos-gtk3](https://github.com/mabasterYT/mabos-gtk3) | `gtk3` | The same for GTK 3 and `~/.config/gtk-3.0/gtk.css` |
 
 ## Using the repository
 
@@ -40,18 +28,18 @@ Add the repository to `/etc/pacman.conf`, after Arch's own:
 Server = https://github.com/mabasterYT/mabos-packages/releases/download/repo
 ```
 
-Then `sudo pacman -Sy mabos-gtk4` (it asks to replace `gtk4`) and restart the GTK 4 apps once.
-Later versions come with `pacman -Syu`.
+Then install what you want, e.g. `sudo pacman -Syu mabos-gtk4` (it asks to replace `gtk4`), and
+restart the apps that use it once. Later versions come with `pacman -Syu`.
 
-## How it is built
+## How it works
 
-`.github/workflows/build.yml` runs every day, on every push to `main` and by hand: in an
-`archlinux:base-devel` container, `scripts/build.sh` follows Arch's packaging (committing the new
-`PKGBUILD` when it changed), builds the package when its version is not in the `repo` release yet,
-signs it and the database with the key kept in the workflow's secrets, and replaces the release's
-files. If the patch stops applying to a new GTK, the build fails and the last published version stays.
+Each package repository follows Arch's packaging every day and builds its package, unsigned, into
+its `package` release. Here, `.github/workflows/publish.yml` runs every three hours, on every push
+and by hand: `scripts/publish.sh` takes each package from the repositories in `packages.txt` that
+`[mabos]` does not have yet, signs it with MabOS's key (kept only in this repository's secrets), adds
+it to the signed database and replaces the `repo` release's files. Only this repository writes the
+database, so packages built at the same time never overwrite each other.
 
 ## Licenses
 
-The patch is a change to GTK and under GTK's license, LGPL-2.1-or-later. The packaging follows Arch's
-gtk4 packaging (0BSD); the scripts here are 0BSD too.
+The scripts here are 0BSD. Each package repository states its own licenses.

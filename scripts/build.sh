@@ -71,6 +71,7 @@ rm -f "$out"/*.old "$out"/*.old.sig
 
 gh release upload "$release" --clobber "$out"/*
 # Older mabos-gtk4 packages leave the release
-grep -E '^mabos-gtk4-.*\.pkg\.tar\.zst(\.sig)?$' <<<"$published" | grep -vxF -e "$package" -e "$package.sig" |
+# (grep finds nothing on the first build; that is not an error)
+{ grep -E '^mabos-gtk4-.*\.pkg\.tar\.zst(\.sig)?$' <<<"$published" | grep -vxF -e "$package" -e "$package.sig" || true; } |
     while read -r old; do gh release delete-asset "$release" "$old" --yes; done
 echo "published $package"

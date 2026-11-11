@@ -1,0 +1,38 @@
+name: Build
+
+# Daily: follows Arch's gtk4 and builds mabos-gtk4 when its version is not published yet
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Build even when this version is published
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    timeout-minutes: 120
+    steps:
+      - name: Git for the checkout
+        run: pacman -Sy --noconfirm --needed git
+      - uses: actions/checkout@v4
+      - name: Build and publish
+        run: scripts/build.sh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MABOS_SIGNING_KEY: ${{ secrets.MABOS_SIGNING_KEY }}
+          MABOS_KEY_ID: ${{ vars.MABOS_KEY_ID }}
+          FORCE: ${{ inputs.force && '1' || '0' }}

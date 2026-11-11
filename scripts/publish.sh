@@ -12,6 +12,8 @@ repo=mabos
 release=repo
 
 pacman -Syu --noconfirm --needed github-cli >/dev/null
+# gh asks git about the checkout, which belongs to another user in the container
+git config --global --add safe.directory "$PWD"
 gpg --batch --import <<<"$MABOS_SIGNING_KEY"
 
 if ! gh release view "$release" >/dev/null 2>&1; then

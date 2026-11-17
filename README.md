@@ -29,3 +29,11 @@ extra-trusted-public-keys = mabos-cache-1:8tNp94HPkSJP6/lZpxfUms/743SFz1TsBPqET0
 builds the flake's `cache` output and uploads, signed, only the paths neither cache.nixos.org nor
 the release has. It holds packages only, never a machine's system or settings. The secret key is the
 repository secret `MABOS_CACHE_KEY`.
+
+## The program index
+
+The `index` release holds what Settings › Apps › Programs and `mabos package` search offline:
+`index.json.gz` (every program nixos-unstable can install now, the snapshot it comes from, its
+version, description and whether it is unfree) and `versions.json.gz` (each program's versions over
+time and the snapshot each came from, for picking another version). `.github/workflows/index.yml`
+runs `scripts/index.py` daily; the history starts the day the index did.

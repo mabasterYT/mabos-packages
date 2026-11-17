@@ -6,10 +6,10 @@ repository are in [mabos-packages-arch](https://github.com/mabasterYT/mabos-pack
 
 | Package | What |
 |---|---|
-| `strata` | Strata, MabOS's file manager: the upstream release made to run on NixOS, with its file chooser portal |
-| `helium` | Helium, a Chromium-based browser: the upstream AppImage |
-| `freshgram` | freshGram, a Telegram fork: the upstream build in an FHS environment (patching the binary breaks it) |
-| `millennium` | Millennium, Steam's modding framework, from its own Nix files with the tag's source |
+| `strata` | [Strata](https://github.com/lgse/strata), MabOS's file manager: the upstream release made to run on NixOS, with its file chooser portal |
+| `helium` | [Helium](https://github.com/imputnet/helium-linux), a Chromium-based browser: the upstream AppImage |
+| `freshgram` | [freshGram](https://github.com/Snowy-Fluffy/freshGram), a Telegram fork: the upstream build in an FHS environment (patching the binary breaks it) |
+| `millennium` | [Millennium](https://github.com/SteamClientHomebrew/Millennium), Steam's modding framework, from its own Nix files with the tag's source |
 
 MabOS takes them through `overlays.default` (which also gives `millennium-steam`, the system's
 Steam with Millennium) and doesn't override this flake's inputs, so its machines get exactly what the

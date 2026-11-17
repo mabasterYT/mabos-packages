@@ -6,6 +6,9 @@ name: Build MabOS's packages
 on:
   push:
     branches: [main]
+    # A change to the text alone builds nothing new
+    paths-ignore:
+      - "**.md"
   schedule:
     - cron: "17 */6 * * *"
   workflow_dispatch:

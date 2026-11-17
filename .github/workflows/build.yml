@@ -1,16 +1,14 @@
-# Builds MabOS's own packages (MabOS's nix/cache/packages.nix) and puts what cache.nixos.org lacks
-# into the "cache" release, signed with MabOS's key. It runs every few hours and by hand; a MabOS
-# commit already built is skipped, and only paths the release doesn't have are uploaded.
+# Builds this flake's packages and puts what cache.nixos.org lacks into the "cache" release, signed
+# with MabOS's key. It runs on every push, every few hours and by hand; a commit already built is
+# skipped, and only paths the release doesn't have are uploaded.
 name: Build MabOS's packages
 
 on:
+  push:
+    branches: [main]
   schedule:
     - cron: "17 */6 * * *"
   workflow_dispatch:
-    inputs:
-      ref:
-        description: MabOS branch or commit to build
-        default: nixos
 
 permissions:
   contents: write
@@ -22,22 +20,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # MabOS is private: a token that can only read it
       - uses: actions/checkout@v4
-        with:
-          repository: mabasterYT/MabOS
-          ref: ${{ inputs.ref || 'nixos' }}
-          token: ${{ secrets.MABOS_READ_TOKEN }}
-          path: mabos
 
       - name: Skip a commit already built
         id: seen
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          commit=$(git -C mabos rev-parse HEAD)
-          echo "commit=$commit" >> "$GITHUB_OUTPUT"
-          if gh release view cache -R "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' | grep -qx "built-$commit"; then
+          if gh release view cache -R "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' | grep -qx "built-$GITHUB_SHA"; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
 
@@ -46,7 +36,7 @@ jobs:
         with:
           # Paths already in MabOS's cache are downloaded, not built again
           extra_nix_config: |
-            extra-substituters = https://github.com/mabasterYT/mabos-cache/releases/download/cache
+            extra-substituters = https://github.com/mabasterYT/mabos-packages/releases/download/cache
             extra-trusted-public-keys = mabos-cache-1:8tNp94HPkSJP6/lZpxfUms/743SFz1TsBPqET0sLuG0=
 
       - name: Build and upload
@@ -58,7 +48,7 @@ jobs:
           key=$(mktemp)
           trap 'rm -f "$key"' EXIT
           printf '%s' "$SECRET_KEY" > "$key"
-          MABOS_CACHE_KEY="$key" mabos/nix/cache/push.sh
+          MABOS_CACHE_KEY="$key" scripts/push.sh
 
       # Marks the commit as built, replacing the previous mark
       - name: Mark the commit
@@ -69,5 +59,5 @@ jobs:
           for old in $(gh release view cache -R "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' | grep '^built-' || true); do
             gh release delete-asset cache "$old" -R "$GITHUB_REPOSITORY" --yes
           done
-          echo "${{ steps.seen.outputs.commit }}" > "built-${{ steps.seen.outputs.commit }}"
-          gh release upload cache "built-${{ steps.seen.outputs.commit }}" -R "$GITHUB_REPOSITORY"
+          echo "$GITHUB_SHA" > "built-$GITHUB_SHA"
+          gh release upload cache "built-$GITHUB_SHA" -R "$GITHUB_REPOSITORY"

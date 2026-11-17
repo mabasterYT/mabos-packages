@@ -61,14 +61,15 @@ export_cache() {
     # Release assets have no folders: the archives sit beside their .narinfo
     sed -i 's|^URL: nar/|URL: |' "$dir"/*.narinfo
     mv "$dir"/nar/* "$dir"/
-    rmdir "$dir"/nar
-    rm -rf "$dir"/realisations "$dir"/log
+    # Everything else nix copy writes is a folder (nar/, log/, realisations/, build-trace-v2/...),
+    # which a release can't hold and Nix doesn't need for substituting
+    find "$dir" -mindepth 1 -maxdepth 1 -type d -exec rm -rf {} +
 }
 
 upload_cache() {
     local dir=$1
     compgen -G "$dir/*.narinfo" >/dev/null || { echo "Nothing to upload"; return; }
-    gh release upload "$tag" -R "$repo" --clobber "$dir"/*
+    gh release upload "$tag" -R "$repo" --clobber "$dir"/nix-cache-info "$dir"/*.narinfo "$dir"/*.nar.*
 }
 
 case "${1:-}" in
